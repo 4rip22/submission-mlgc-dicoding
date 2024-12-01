@@ -7,7 +7,7 @@ async function storeData(id, data) {
 
   try {
     const db = new Firestore({
-      projectId: 'open-music-api',
+      projectId: 'submissionmlgc-aripsaputra',
       keyFilename: pathKey,
     });
  
