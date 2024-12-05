@@ -1,15 +1,17 @@
 const tf = require("@tensorflow/tfjs-node");
-
+const { v4: uuidv4 } = require("uuid"); // UUID untuk ID unik
 const InputError = require("../exceptions/InputError");
 
 async function predictClassification(model, image) {
   try {
+    // Preprocessing image
     const tensor = tf.node
       .decodeImage(image)
       .resizeNearestNeighbor([224, 224])
       .expandDims()
       .toFloat();
 
+    // Predict using the model
     const prediction = model.predict(tensor);
     const score = await prediction.data();
     const confidenceScore = Math.max(...score) * 100;
@@ -17,24 +19,26 @@ async function predictClassification(model, image) {
     console.log("score: ", score);
     console.log("confidenceScore: ", confidenceScore);
 
-    // Model akan mengembalikan array dengan rentang nilai 0 hingga 1. Di mana jika rentang nilainya di atas 50% diklasifikasikan sebagai Cancer, jika di bawah atau sama dengan 50% diklasifikasikan sebagai Non-cancer.
+    // Determine label and suggestion
     const label = confidenceScore > 50 ? "Cancer" : "Non-cancer";
+    const suggestion =
+      label === "Cancer"
+        ? "Segera periksa ke dokter!"
+        : "Penyakit kanker tidak terdeteksi.";
 
-    let suggestion;
-
-    if (label === "Cancer") {
-      suggestion =
-        "Bersabar, jangan panik. Segera periksakan diri ke dokter untuk mendapatkan penanganan lebih lanjut.";
-    } else {
-      suggestion =
-        "Tetap jaga kesehatan dan pola hidup sehat. Jangan lupa untuk rutin periksa kesehatan.";
-    }
-
-    return {
-      confidenceScore,
-      label,
-      suggestion: suggestion,
+    // Build response data
+    const response = {
+      status: "success",
+      message: "Model is predicted successfully",
+      data: {
+        id: uuidv4(),
+        result: label,
+        suggestion,
+        createdAt: new Date().toISOString(),
+      },
     };
+
+    return response;
   } catch (error) {
     throw new InputError(`Terjadi kesalahan dalam melakukan prediksi`);
   }
