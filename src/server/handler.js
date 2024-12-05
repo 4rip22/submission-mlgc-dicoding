@@ -3,60 +3,88 @@ const crypto = require("crypto");
 const storeData = require("../services/storeData");
 
 async function postPredictHandler(request, h) {
-  const { image } = request.payload;
-  const { model } = request.server.app;
-  const { confidenceScore, label, suggestion } = await predictClassification(
-    model,
-    image
-  );
-  const id = crypto.randomUUID();
-  const createdAt = new Date().toISOString();
+  try {
+    const { image } = request.payload;
+    const { model } = request.server.app;
 
-  const data = {
-    id: id,
-    result: label,
-    suggestion: suggestion,
-    createdAt: createdAt,
-  };
+    // Perform inference
+    const { confidenceScore, label, suggestion } = await predictClassification(
+      model,
+      image
+    );
 
-  await storeData(id, data);
+    const id = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
 
-  const response = h.response({
-    status: "success",
-    message:
+    // Build data object
+    const data = {
+      id,
+      result: label,
+      confidenceScore,
+      suggestion,
+      createdAt,
+    };
+
+    // Store data in database
+    await storeData(id, data);
+
+    const message =
       confidenceScore > 99
-        ? "Model is predicted successfully"
-        : "Model is predicted successfully but under threshold. Please use the correct picture",
-    data,
-  });
-  response.code(201);
-  return response;
+        ? "Model is predicted successfully."
+        : "Model is predicted successfully but under threshold. Please use the correct picture.";
+
+    // Build response
+    const response = h.response({
+      status: "success",
+      message,
+      data,
+    });
+    response.code(201);
+    return response;
+  } catch (error) {
+    console.error(error);
+    return h.response({
+      status: "error",
+      message: "Gagal melakukan prediksi. Silakan coba lagi.",
+    }).code(500);
+  }
 }
 
 async function predictHistories(request, h) {
-  const { model } = request.server.app;
-  const { Firestore } = require("@google-cloud/firestore");
-  const db = new Firestore({
-    projectId: "submissionmlgc-aripsaputra",
-  });
-  const predictCollection = db.collection("predictions");
-  const snapshot = await predictCollection.get();
-  const result = [];
-  snapshot.forEach((doc) => {
-    result.push({
-      id: doc.id,
-      history: {
-        result: doc.data().result,
-        createdAt: doc.data().createdAt,
-        suggestion: doc.data().suggestion,
-        id: doc.data().id,
-      },
+  try {
+    const { Firestore } = require("@google-cloud/firestore");
+    const db = new Firestore({ projectId: "submissionmlgc-aripsaputra" });
+
+    // Fetch prediction histories from Firestore
+    const predictCollection = db.collection("predictions");
+    const snapshot = await predictCollection.get();
+
+    const result = [];
+    snapshot.forEach((doc) => {
+      result.push({
+        id: doc.id,
+        history: {
+          id: doc.data().id,
+          result: doc.data().result,
+          confidenceScore: doc.data().confidenceScore,
+          suggestion: doc.data().suggestion,
+          createdAt: doc.data().createdAt,
+        },
+      });
     });
-  });
-  return h.response({
-    status: "success",
-    data: result,
-  });
+
+    // Build response
+    return h.response({
+      status: "success",
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    return h.response({
+      status: "error",
+      message: "Gagal mengambil riwayat prediksi.",
+    }).code(500);
+  }
 }
 
 module.exports = { postPredictHandler, predictHistories };

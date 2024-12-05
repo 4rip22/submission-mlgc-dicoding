@@ -1,17 +1,16 @@
 const tf = require("@tensorflow/tfjs-node");
-const { v4: uuidv4 } = require("uuid"); // UUID untuk ID unik
 const InputError = require("../exceptions/InputError");
 
 async function predictClassification(model, image) {
   try {
-    // Preprocessing image
+    // Preprocess image
     const tensor = tf.node
       .decodeImage(image)
       .resizeNearestNeighbor([224, 224])
       .expandDims()
       .toFloat();
 
-    // Predict using the model
+    // Model prediction
     const prediction = model.predict(tensor);
     const score = await prediction.data();
     const confidenceScore = Math.max(...score) * 100;
@@ -26,21 +25,9 @@ async function predictClassification(model, image) {
         ? "Segera periksa ke dokter!"
         : "Penyakit kanker tidak terdeteksi.";
 
-    // Build response data
-    const response = {
-      status: "success",
-      message: "Model is predicted successfully",
-      data: {
-        id: uuidv4(),
-        result: label,
-        suggestion,
-        createdAt: new Date().toISOString(),
-      },
-    };
-
-    return response;
+    return { label, confidenceScore, suggestion };
   } catch (error) {
-    throw new InputError(`Terjadi kesalahan dalam melakukan prediksi`);
+    throw new InputError("Terjadi kesalahan dalam melakukan prediksi.");
   }
 }
 
