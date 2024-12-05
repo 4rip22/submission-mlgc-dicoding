@@ -31,7 +31,7 @@ async function postPredictHandler(request, h) {
     const message =
       confidenceScore > 99
         ? "Model is predicted successfully"
-        : "Model is predicted successfully";
+        : "";
 
     // Build response
     const response = h.response({
@@ -44,9 +44,9 @@ async function postPredictHandler(request, h) {
   } catch (error) {
     console.error(error);
     return h.response({
-      status: "error",
-      message: "Gagal melakukan prediksi. Silakan coba lagi.",
-    }).code(500);
+      status: "fail",
+      message: "Terjadi kesalahan dalam melakukan prediksi",
+    }).code(400);
   }
 }
 
