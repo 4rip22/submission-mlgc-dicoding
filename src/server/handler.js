@@ -30,8 +30,8 @@ async function postPredictHandler(request, h) {
 
     const message =
       confidenceScore > 99
-        ? "Model is predicted successfully."
-        : "Model is predicted successfully but under threshold. Please use the correct picture.";
+        ? "Model is predicted successfully"
+        : "Model is predicted successfully";
 
     // Build response
     const response = h.response({
@@ -66,7 +66,6 @@ async function predictHistories(request, h) {
         history: {
           id: doc.data().id,
           result: doc.data().result,
-          confidenceScore: doc.data().confidenceScore,
           suggestion: doc.data().suggestion,
           createdAt: doc.data().createdAt,
         },
