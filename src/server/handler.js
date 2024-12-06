@@ -31,7 +31,7 @@ async function postPredictHandler(request, h) {
     const message =
       confidenceScore > 99
         ? "Model is predicted successfully"
-        : "";
+        : "Model is predicted successfully";
 
     // Build response
     const response = h.response({
