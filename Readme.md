@@ -16,5 +16,6 @@ Ikuti langkah-langkah berikut untuk menyiapkan dan menjalankan aplikasi ini di m
 Pertama, clone repositori ini ke dalam folder lokal Anda.
 
 ```bash
+
 git clone https://github.com/4rip22/submission-mlgc-dicoding.git
 cd submission-mlgc-dicoding
