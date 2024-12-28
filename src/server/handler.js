@@ -7,6 +7,7 @@ async function postPredictHandler(request, h) {
     const { image } = request.payload;
     const { model } = request.server.app;
 
+    // Perform inference
     const { confidenceScore, label, suggestion } = await predictClassification(
       model,
       image
